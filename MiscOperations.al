@@ -36,6 +36,22 @@ codeunit 50100 MiscOperations
         exit(Format(CustJsonObject));
     end;
 
+    procedure GetCustomer2(custNo: Code[20]): Text
+    var
+        Cust: Record Customer;
+        custName: Text[100];
+        countryCode: Code[10];
+        phoneNo: Text[30];
+    begin
+        if Cust.Get(custNo) then begin
+            custNo := Cust."No.";
+            custName := Cust.Name;
+            countryCode := Cust."Country/Region Code";
+            phoneNo := Cust."Phone No.";
+        end;
+        exit(StrSubstNo('CustNo: %1, CustName: %2, CountryCode: %3, PhoneNo: %4', custNo, custName, countryCode, phoneNo));
+    end;
+
     procedure CreateNewCustomer(inputJson: Text): Text
     var
         CustJsonResponse: JsonObject;
@@ -64,6 +80,21 @@ codeunit 50100 MiscOperations
             PhoneNo := CustJsonToken.AsValue().AsCode();
             Customer.Validate("Phone No.", PhoneNo);
         end;
+        if Customer.Insert(true) then
+            exit(StrSubstNo('Customer %1 Created Successfully', Customer."No."))
+        else
+            exit('Customer Creation Failed');
+    end;
+
+    procedure CreateNewCustomer2(custNo: Code[20]; custName: Text[100]; countryCode: Code[10]; phoneNo: Text[30]): Text
+    var
+        Customer: Record Customer;
+    begin
+        Customer.Init();
+        Customer.Validate("No.", custNo);
+        Customer.Validate(Name, custName);
+        Customer.Validate("Country/Region Code", countryCode);
+        Customer.Validate("Phone No.", phoneNo);
         if Customer.Insert(true) then
             exit(StrSubstNo('Customer %1 Created Successfully', Customer."No."))
         else
@@ -100,7 +131,6 @@ codeunit 50100 MiscOperations
                         FileName := CustJsonToken.AsValue().AsText();
                         CustJsonResponse.Get('FileExtension', CustJsonToken);
                         FileExtension := CustJsonToken.AsValue().AsText();
-
                         TempBlob.CreateOutStream(OutStr);
                         Base64Convert.FromBase64(AttachmentBase64, OutStr);
                         TempBlob.CreateInStream(InStr);
